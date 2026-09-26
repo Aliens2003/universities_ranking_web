@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>大学排名查询</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1 data-i18n="appTitle">美国大学排名查询</h1>
+        <p data-i18n="appSubtitle">综排前 50 与硕士专排前 20，可按学校、方向和排名快速筛选。</p>
+      </div>
+      <div class="toolbar" aria-label="Language and view controls">
+        <div class="segmented" role="group" aria-label="Language">
+          <button type="button" class="segment active" data-lang="zh">中文</button>
+          <button type="button" class="segment" data-lang="en">EN</button>
+        </div>
+        <div class="segmented" role="group" aria-label="Ranking explorer">
+          <button type="button" class="segment active" data-section="us" data-i18n="usTab">美国大学排名查询</button>
+          <button type="button" class="segment" data-section="world" data-i18n="worldTab">世界大学排名查询</button>
+        </div>
+        <div class="segmented" role="group" aria-label="U.S. ranking view" data-us-subviews>
+          <button type="button" class="segment active" data-view="national" data-i18n="nationalTab">综排 Top 50</button>
+          <button type="button" class="segment" data-view="graduate" data-i18n="graduateTab">研究生院排名</button>
+        </div>
+        <div class="segmented" role="group" aria-label="World ranking view" data-world-subviews hidden>
+          <button type="button" class="segment" data-view="world" data-i18n="worldOverallTab">综合排名 Top 100</button>
+          <button type="button" class="segment" data-view="worldSubject" data-i18n="worldSubjectTab">学科排名 Top 100</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="filters" aria-label="Filters">
+        <label class="searchbox">
+          <span data-i18n="searchLabel">搜索</span>
+          <input id="searchInput" type="search" autocomplete="off" data-i18n-placeholder="searchPlaceholder" placeholder="输入学校、中文名、城市或专业" />
+        </label>
+        <label>
+          <span data-i18n="fieldLabel">领域</span>
+          <select id="fieldFilter">
+            <option value="" data-i18n="allFields">全部领域</option>
+          </select>
+        </label>
+        <label>
+          <span data-i18n="stateLabel">州/地区</span>
+          <select id="stateFilter">
+            <option value="" data-i18n="allStates">全部地区</option>
+          </select>
+        </label>
+        <label>
+          <span data-i18n="typeLabel">学校类型</span>
+          <select id="typeFilter">
+            <option value="" data-i18n="allTypes">全部类型</option>
+            <option value="Private" data-i18n="privateType">私立</option>
+            <option value="Public" data-i18n="publicType">公立</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="stats" aria-label="Summary">
+        <div>
+          <strong id="resultCount">0</strong>
+          <span data-i18n="resultsLabel">条结果</span>
+        </div>
+        <div>
+          <strong id="sourceYear">2026</strong>
+          <span data-i18n="sourceLabel">US News 榜单</span>
+        </div>
+        <div>
+          <strong id="scopeLabel">Top 50</strong>
+          <span data-i18n="scopeText">当前范围</span>
+        </div>
+      </section>
+
+      <section class="table-wrap" aria-live="polite">
+        <table>
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div id="emptyState" class="empty" hidden data-i18n="emptyState">没有匹配结果，请调整筛选条件。</div>
+        <nav id="pagination" class="pagination" aria-label="Pagination" hidden>
+          <button id="previousPage" type="button" class="page-button" aria-label="Previous page" title="Previous page">‹</button>
+          <span id="pageInfo"></span>
+          <button id="nextPage" type="button" class="page-button" aria-label="Next page" title="Next page">›</button>
+        </nav>
+      </section>
+    </main>
+
+    <footer>
+      <span data-i18n="footnote">数据整理自公开可核实的 US News 2026 榜单发布信息、学校官方新闻和榜单转载来源；申请时建议再次核对目标项目官网。</span>
+    </footer>
+
+    <script src="./world-rankings-data.js"></script>
+    <script src="./subject-rankings-data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
