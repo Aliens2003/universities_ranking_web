@@ -284,10 +284,15 @@ const translations = {
     worldAppTitle: "世界大学排名查询",
     worldAppSubtitle: "查询 QS 2027 世界大学排名前 100 名，可按学校、国家或地区快速筛选。",
     subjectAppSubtitle: "查询 QS 2026 世界大学学科排名前 100 名，可按学科、学校和国家或地区筛选。",
-    usTab: "美国大学排名查询",
+    usTab: "U.S. News 排名",
     nationalTab: "综排 Top 50",
-    graduateTab: "研究生院排名",
-    worldTab: "世界大学排名查询",
+    graduateTab: "研究生工程学院排名",
+    worldTab: "QS 排名",
+    qsWorldRank: "QS 世界名次",
+    countryOverallScope: "QS 世界 Top 100 · {country}",
+    countrySubjectScope: "QS 学科 Top 100 · {country}",
+    countryEmpty: "{country}在当前榜单中无结果。",
+    clearFilters: "清除筛选",
     worldOverallTab: "综合排名 Top 100",
     worldSubjectTab: "学科排名 Top 100",
     searchLabel: "搜索",
@@ -342,10 +347,15 @@ const translations = {
     worldAppTitle: "World University Rankings Explorer",
     worldAppSubtitle: "Search the QS World University Rankings 2027 Top 100 by university or country/territory.",
     subjectAppSubtitle: "Search the QS World University Rankings by Subject 2026 Top 100 by subject, university, or country/territory.",
-    usTab: "U.S. Rankings",
+    usTab: "U.S. News Rankings",
     nationalTab: "National Top 50",
-    graduateTab: "Graduate Schools",
-    worldTab: "World Rankings",
+    graduateTab: "Graduate Engineering Schools",
+    worldTab: "QS Rankings",
+    qsWorldRank: "QS world rank",
+    countryOverallScope: "QS World Top 100 · {country}",
+    countrySubjectScope: "QS Subject Top 100 · {country}",
+    countryEmpty: "No universities from {country} appear in this ranking.",
+    clearFilters: "Clear filters",
     worldOverallTab: "Overall Top 100",
     worldSubjectTab: "Subject Top 100",
     searchLabel: "Search",
@@ -547,7 +557,9 @@ const cityZh = {
 };
 
 let lang = "zh";
-let view = "national";
+let view = "world";
+let qsCountry = "";
+const viewFilters = new Map();
 let lastUsView = "national";
 let lastWorldView = "world";
 let currentPage = 1;
@@ -568,6 +580,8 @@ const els = {
   sourceLabel: document.querySelector('[data-i18n="sourceLabel"]'),
   scope: document.querySelector("#scopeLabel"),
   empty: document.querySelector("#emptyState"),
+  emptyMessage: document.querySelector("#emptyMessage"),
+  clearFilters: document.querySelector("#clearFilters"),
   pagination: document.querySelector("#pagination"),
   previousPage: document.querySelector("#previousPage"),
   nextPage: document.querySelector("#nextPage"),
@@ -703,21 +717,33 @@ function translateStaticText() {
     button.classList.toggle("active", button.dataset.lang === lang);
   });
   document.querySelectorAll("[data-view]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.view === view);
+    const isActive = button.dataset.view === view;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
   });
   document.querySelectorAll("[data-section]").forEach((button) => {
     const isActive = button.dataset.section === "world" ? isWorldView() : !isWorldView();
     button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
   });
 }
 
-function rebuildFilters() {
+function readFilters() {
+  return { search: els.search.value, field: els.field.value, state: els.state.value, type: els.type.value };
+}
+
+function rebuildFilters(filters = {}) {
   const activeFields = view === "worldSubject"
     ? Object.keys(qsSubjectNames)
     : [...new Set(graduateSchools.map((item) => item.category))].sort();
   const worldRows = view === "worldSubject" ? subjectRankings : worldRankings;
+  const countries = new Map(worldRows.map((item) => [item.country, item]));
+  if (isWorldView() && qsCountry && !countries.has(qsCountry)) {
+    const selected = [...worldRankings, ...subjectRankings].find((item) => item.country === qsCountry);
+    if (selected) countries.set(qsCountry, selected);
+  }
   const activeStates = isWorldView()
-    ? [...new Set(worldRows.map((item) => item.country).filter(Boolean))].sort()
+    ? [...countries.keys()].filter(Boolean).sort()
     : [...new Set(national.map((item) => item.state))].sort();
 
   els.field.innerHTML = `<option value="">${t(view === "worldSubject" ? "allSubjects" : "allFields")}</option>` +
@@ -731,7 +757,7 @@ function rebuildFilters() {
     }).join("");
   els.state.innerHTML = `<option value="">${t(isWorldView() ? "allCountries" : "allStates")}</option>` +
     activeStates.map((state) => {
-      const worldItem = isWorldView() ? worldRows.find((item) => item.country === state) : null;
+      const worldItem = isWorldView() ? countries.get(state) : null;
       const label = worldItem ? localCountry(worldItem) : localState(state);
       return `<option value="${escapeHtml(state)}">${escapeHtml(label)}</option>`;
     }).join("");
@@ -740,7 +766,11 @@ function rebuildFilters() {
     <option value="Private">${t("privateType")}</option>
     <option value="Public">${t("publicType")}</option>
   `;
-  els.field.parentElement.hidden = view !== "graduate" && view !== "worldSubject";
+  els.search.value = filters.search ?? "";
+  els.field.value = filters.field ?? "";
+  els.state.value = isWorldView() ? qsCountry : filters.state ?? "";
+  els.type.value = filters.type ?? "";
+  els.field.parentElement.hidden = view !== "worldSubject";
   els.state.parentElement.hidden = false;
   els.type.parentElement.hidden = false;
   els.stateLabel.textContent = t(isWorldView() ? "countryLabel" : "stateLabel");
@@ -837,7 +867,7 @@ function renderGraduate(rows) {
 
 function renderWorld(rows) {
   els.head.innerHTML = `<tr>
-    <th>${t("rank")}</th>
+    <th>${t("qsWorldRank")}</th>
     <th>${t("school")}</th>
     <th>${t("countryRegion")}</th>
     <th>${t("overallScore")}</th>
@@ -859,7 +889,7 @@ function renderWorld(rows) {
 function renderSubjects(rows) {
   els.head.innerHTML = `<tr>
     <th>${t("subjectName")}</th>
-    <th>${t("rank")}</th>
+    <th>${t("qsWorldRank")}</th>
     <th>${t("school")}</th>
     <th>${t("countryRegion")}</th>
     <th>${t("overallScore")}</th>
@@ -893,11 +923,17 @@ function render() {
   els.search.placeholder = t(isWorld ? "worldSearchPlaceholder" : "searchPlaceholder");
   els.fieldLabel.textContent = t(isSubject ? "subjectName" : "fieldLabel");
   els.stateLabel.textContent = t(isWorld ? "countryLabel" : "stateLabel");
-  els.filters.classList.toggle("compact-filters", view === "graduate" || view === "world");
+  els.filters.classList.toggle("compact-filters", view === "world");
+  els.filters.classList.toggle("search-only", view === "graduate");
   els.filters.classList.toggle("subject-filters", isSubject);
   els.sourceYear.textContent = isSubject ? "2026" : view === "graduate" ? "2026–2027" : "2027";
   els.sourceLabel.textContent = t(isSubject ? "subjectSourceLabel" : isWorld ? "worldSourceLabel" : "sourceLabel");
-  els.scope.textContent = isSubject ? t("subjectScope") : isWorld ? t("completeRanking") : "Top 50";
+  const countryLabel = isWorld && qsCountry ? els.state.selectedOptions[0]?.textContent : "";
+  const scope = isSubject ? "subjectScope" : "completeRanking";
+  const countryScope = isSubject ? "countrySubjectScope" : "countryOverallScope";
+  els.scope.textContent = countryLabel
+    ? t(countryScope).replace("{country}", countryLabel)
+    : isWorld ? t(scope) : "Top 50";
   els.footnote.textContent = t(isSubject ? "subjectFootnote" : isWorld ? "worldFootnote" : "footnote");
 
   if (view === "national") renderNational(rows);
@@ -921,22 +957,32 @@ function render() {
   }
   if (!isWorld) els.pagination.hidden = true;
   els.empty.hidden = rows.length > 0;
+  if (rows.length === 0) {
+    const ranking = isSubject ? subjectRankings : worldRankings;
+    const countryAbsent = countryLabel && !ranking.some((item) =>
+      item.country === qsCountry && (!isSubject || !els.field.value || item.subject === els.field.value)
+    );
+    els.emptyMessage.textContent = countryAbsent
+      ? t("countryEmpty").replace("{country}", countryLabel)
+      : t("emptyState");
+  }
 }
 
 function setView(nextView) {
+  if (view === nextView) return;
+  viewFilters.set(view, readFilters());
   view = nextView;
   if (isWorldView(nextView)) lastWorldView = nextView;
   else lastUsView = nextView;
   currentPage = 1;
-  els.search.value = "";
-  rebuildFilters();
+  rebuildFilters(viewFilters.get(view));
   render();
 }
 
 document.querySelectorAll("[data-lang]").forEach((button) => {
   button.addEventListener("click", () => {
     lang = button.dataset.lang;
-    rebuildFilters();
+    rebuildFilters(readFilters());
     render();
   });
 });
@@ -954,9 +1000,18 @@ document.querySelectorAll("[data-section]").forEach((button) => {
 
 [els.search, els.field, els.state, els.type].forEach((control) => {
   control.addEventListener("input", () => {
+    if (control === els.state && isWorldView()) qsCountry = els.state.value;
     currentPage = 1;
     render();
   });
+});
+
+els.clearFilters.addEventListener("click", () => {
+  if (isWorldView()) qsCountry = "";
+  currentPage = 1;
+  rebuildFilters();
+  render();
+  els.search.focus();
 });
 
 els.previousPage.addEventListener("click", () => {

@@ -19,8 +19,8 @@
   <body>
     <header class="topbar">
       <div>
-        <h1 data-i18n="appTitle">美国大学排名查询</h1>
-        <p data-i18n="appSubtitle">综排前 50 与硕士专排前 20，可按学校、方向和排名快速筛选。</p>
+        <h1 data-i18n="appTitle">大学排名查询</h1>
+        <p data-i18n="appSubtitle">QS 2027 世界大学综合排名 Top 100</p>
       </div>
       <div class="toolbar" aria-label="Language and view controls">
         <div class="segmented" role="group" aria-label="Language">
@@ -28,15 +28,15 @@
           <button type="button" class="segment" data-lang="en">EN</button>
         </div>
         <div class="segmented" role="group" aria-label="Ranking explorer">
-          <button type="button" class="segment active" data-section="us" data-i18n="usTab">美国大学排名查询</button>
-          <button type="button" class="segment" data-section="world" data-i18n="worldTab">世界大学排名查询</button>
+          <button type="button" class="segment active" data-section="world" data-i18n="worldTab">QS 排名</button>
+          <button type="button" class="segment" data-section="us" data-i18n="usTab">U.S. News 排名</button>
         </div>
-        <div class="segmented" role="group" aria-label="U.S. ranking view" data-us-subviews>
-          <button type="button" class="segment active" data-view="national" data-i18n="nationalTab">综排 Top 50</button>
-          <button type="button" class="segment" data-view="graduate" data-i18n="graduateTab">研究生院排名</button>
+        <div class="segmented" role="group" aria-label="U.S. News ranking type" data-us-subviews hidden>
+          <button type="button" class="segment" data-view="national" data-i18n="nationalTab">综排 Top 50</button>
+          <button type="button" class="segment" data-view="graduate" data-i18n="graduateTab">研究生工程学院排名</button>
         </div>
-        <div class="segmented" role="group" aria-label="World ranking view" data-world-subviews hidden>
-          <button type="button" class="segment" data-view="world" data-i18n="worldOverallTab">综合排名 Top 100</button>
+        <div class="segmented" role="group" aria-label="QS ranking type" data-world-subviews>
+          <button type="button" class="segment active" data-view="world" data-i18n="worldOverallTab">综合排名 Top 100</button>
           <button type="button" class="segment" data-view="worldSubject" data-i18n="worldSubjectTab">学科排名 Top 100</button>
         </div>
       </div>
@@ -90,7 +90,10 @@
           <thead id="tableHead"></thead>
           <tbody id="tableBody"></tbody>
         </table>
-        <div id="emptyState" class="empty" hidden data-i18n="emptyState">没有匹配结果，请调整筛选条件。</div>
+        <div id="emptyState" class="empty" hidden>
+          <p id="emptyMessage"></p>
+          <button id="clearFilters" type="button" class="page-button clear-filters" data-i18n="clearFilters">清除筛选</button>
+        </div>
         <nav id="pagination" class="pagination" aria-label="Pagination" hidden>
           <button id="previousPage" type="button" class="page-button" aria-label="Previous page" title="Previous page">‹</button>
           <span id="pageInfo"></span>
